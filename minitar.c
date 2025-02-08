@@ -142,3 +142,7 @@ int extract_files_from_archive(const char *archive_name) {
     // TODO: Not yet implemented
     return 0;
 }
+int update_files_to_archive(const char *archive_name, const file_list_t *files) {
+    // TODO: Not yet implemented
+    return 0;
+}
