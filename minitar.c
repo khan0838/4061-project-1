@@ -124,8 +124,79 @@ int remove_trailing_bytes(const char *file_name, size_t nbytes) {
 }
 
 int create_archive(const char *archive_name, const file_list_t *files) {
-    // TODO: Not yet implemented
+    char err_msg[MAX_MSG_LEN];
+    int archive_fd = open(archive_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (archive_fd == -1) {
+        snprintf(err_msg, MAX_MSG_LEN, "Failed to create archive %s", archive_name);
+        perror(err_msg);
+        return -1;
+    }
+
+    const node_t *current = files -> head;
+    while (current != NULL) {
+        int file_fd = open(current -> name, O_RDONLY);
+        if (file_fd == -1) {
+            snprintf(err_msg, MAX_MSG_LEN, "Failed to open file %s", current -> name);
+            perror(err_msg);
+            close(archive_fd);
+            return -1;
+        }
+
+        tar_header header;
+        memset(&header, 0, sizeof(header));
+        if (fill_tar_header(&header, current -> name) == -1) {
+            close(file_fd);
+            close(archive_fd);
+            return -1;
+        }
+
+        if (write(archive_fd, &header, BLOCK_SIZE) != BLOCK_SIZE) {
+            snprintf(err_msg, MAX_MSG_LEN, "Failed to write header for %s", current -> name);
+            perror(err_msg);
+            close(file_fd);
+            close(archive_fd);
+            return -1;
+        }
+
+        char buffer[BLOCK_SIZE];
+        ssize_t bytes_rd;
+        while ((bytes_rd = read(file_fd, buffer, BLOCK_SIZE)) > 0) {
+            if (bytes_rd < BLOCK_SIZE) {
+                memset(buffer + bytes_rd, 0, BLOCK_SIZE - bytes_rd);
+            }
+
+            if (write(archive_fd, buffer, BLOCK_SIZE) != BLOCK_SIZE) {
+                snprintf(err_msg, MAX_MSG_LEN, "Failed to write content for %s", current -> name);
+                perror(err_msg);
+                close(file_fd);
+                close(archive_fd);
+                return -1;
+            }
+        }
+
+        if (bytes_rd == -1) {
+            snprintf(err_msg, MAX_MSG_LEN, "Failed to read from %s", current -> name);
+            perror(err_msg);
+            close(file_fd);
+            close(archive_fd);
+            return -1;
+        }
+
+        close(file_fd);
+        current = current -> next;
+    }
+
+    char zeros[BLOCK_SIZE * NUM_TRAILING_BLOCKS] = {0};
+    if (write(archive_fd, zeros, BLOCK_SIZE * NUM_TRAILING_BLOCKS) != BLOCK_SIZE * NUM_TRAILING_BLOCKS) {
+        snprintf(err_msg, MAX_MSG_LEN, "Failed to write end markers to %s", archive_name);
+        perror(err_msg);
+        close(archive_fd);
+        return -1;
+    }
+
+    close(archive_fd);
     return 0;
+
 }
 
 int append_files_to_archive(const char *archive_name, const file_list_t *files) {
@@ -139,10 +210,6 @@ int get_archive_file_list(const char *archive_name, file_list_t *files) {
 }
 
 int extract_files_from_archive(const char *archive_name) {
-    // TODO: Not yet implemented
-    return 0;
-}
-int update_files_to_archive(const char *archive_name, const file_list_t *files) {
     // TODO: Not yet implemented
     return 0;
 }
