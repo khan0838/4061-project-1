@@ -79,5 +79,8 @@ int get_archive_file_list(const char *archive_name, file_list_t *files);
  */
 int extract_files_from_archive(const char *archive_name);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> minitar_main
 #endif    // _MINITAR_H

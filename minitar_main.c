@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
             file_list_clear(&files);
             return 0;
         } else {
-            perror("Error: something went with appending archive\n");
+
             file_list_clear(&files);
             return 1;
         }
@@ -75,20 +75,33 @@ int main(int argc, char **argv) {
             perror("Failed to call get method");
             file_list_clear(&files);
             file_list_clear(&oldFiles);
+            return 1;
         }
 
-        if(file_list_is_subset(&files, &oldFiles) == 1){
-            append_files_to_archive(archive_name, &files);
-            file_list_clear(&files);
-            file_list_clear(&oldFiles);
-            return 0;
-        }
-        else{
+        if(file_list_is_subset(&files, &oldFiles) == 0){
             printf("Error: One or more of the specified files is not already present in archive");
             file_list_clear(&files);
             file_list_clear(&oldFiles);
+
             return 1;
         }
+        else{
+            if(append_files_to_archive(archive_name, &files) == -1){
+                perror("could not append file");
+                file_list_clear(&files);
+                file_list_clear(&oldFiles);
+                return 1;
+
+            }
+            file_list_clear(&files);
+            file_list_clear(&oldFiles);
+            return 0;
+
+        }
+        file_list_clear(&files);
+        file_list_clear(&oldFiles);
+        return 0;
+
 
     }
 
