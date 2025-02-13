@@ -10,6 +10,7 @@
 #include <sys/sysmacros.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #define NUM_TRAILING_BLOCKS 2
 #define MAX_MSG_LEN 128
@@ -381,7 +382,7 @@ int extract_files_from_archive(const char *archive_name) {
             free(header);
             return -1;
         }    // Convert size from octal to decimal
-        int total_blocks = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        // int total_blocks = (file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
         // OPEN FILE FOR WRITING - WRITE IN byte_read(read from archive) to new files
         //
